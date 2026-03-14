@@ -7,7 +7,7 @@ import os
 import pandas as pd
 
 # Page Config
-st.set_page_config(page_title="Utah Gravel Estimator", page_icon="🪨", layout="wide")
+st.set_page_config(page_title="Utah Aggregate Estimator", layout="wide")
 
 # Constants
 AVG_SPEED_MPH = 35 
@@ -117,7 +117,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<h1 class='centered-header'>🪨 Utah Gravel Estimator</h1>", unsafe_allow_html=True)
+st.markdown("<h1 class='centered-header'>Utah Aggregate Estimator</h1>", unsafe_allow_html=True)
 st.markdown("<div class='centered-sub'>Calculate the most cost-effective aggregate delivery options using live routing.</div>", unsafe_allow_html=True)
 
 pits, trucks = load_data()
