@@ -97,22 +97,38 @@ st.markdown("""
     }
     /* Center the headers */
     .centered-header {
-        text-align: center;
+        text-align: center !important;
+        display: block;
+        width: 100%;
         font-family: 'Oswald', sans-serif;
         font-weight: 900;
-        font-size: 3rem;
+        font-size: 3.5rem;
         text-transform: uppercase;
-        letter-spacing: 2px;
+        letter-spacing: 1px;
         color: #1f2937;
         margin-bottom: 0.5rem;
         margin-top: 1rem;
+        line-height: 1.2;
     }
     .centered-sub {
-        text-align: center;
+        text-align: center !important;
+        display: block;
+        width: 100%;
         font-size: 1.1rem;
         font-weight: 500;
         color: #6b7280;
         margin-bottom: 2rem;
+    }
+    
+    /* Mobile adjustments */
+    @media (max-width: 768px) {
+        .centered-header {
+            font-size: 2.2rem;
+            letter-spacing: 0px;
+        }
+        .centered-sub {
+            font-size: 1rem;
+        }
     }
 </style>
 """, unsafe_allow_html=True)
