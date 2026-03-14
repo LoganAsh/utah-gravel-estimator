@@ -88,8 +88,30 @@ def get_real_route(lat1, lon1, lat2, lon2):
     return dist, dist / 35.0
 
 # UI Starts Here
-st.title("🪨 Utah Gravel Estimator")
-st.markdown("Calculate the most cost-effective aggregate delivery options using live routing.")
+st.markdown("""
+<style>
+    /* Strong, Professional Font */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+    html, body, [class*="css"]  {
+        font-family: 'Inter', sans-serif;
+    }
+    /* Center the headers */
+    .centered-header {
+        text-align: center;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+    }
+    .centered-sub {
+        text-align: center;
+        font-size: 1.2rem;
+        color: #666;
+        margin-bottom: 2rem;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown("<h1 class='centered-header'>🪨 Utah Gravel Estimator</h1>", unsafe_allow_html=True)
+st.markdown("<div class='centered-sub'>Calculate the most cost-effective aggregate delivery options using live routing.</div>", unsafe_allow_html=True)
 
 pits, trucks = load_data()
 
@@ -100,7 +122,7 @@ if not pits or not trucks:
 # Sidebar for inputs
 with st.sidebar:
     st.header("Job Details")
-    address = st.text_area("Project Address", value="2805 W 13800 S Bluffdale UT")
+    address = st.text_area("Project Address", value="", placeholder="e.g., 5600 W 8600 S, West Jordan UT")
     tons = st.number_input("Tons Needed", min_value=1, value=800, step=10)
     
     truck_options = ["Best Option (Compare Both)", "Side Dump", "10-Wheeler"]
