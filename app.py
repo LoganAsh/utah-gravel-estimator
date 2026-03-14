@@ -91,20 +91,27 @@ def get_real_route(lat1, lon1, lat2, lon2):
 st.markdown("""
 <style>
     /* Strong, Professional Font */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Oswald:wght@800&display=swap');
     html, body, [class*="css"]  {
         font-family: 'Inter', sans-serif;
     }
     /* Center the headers */
     .centered-header {
         text-align: center;
-        font-weight: 800;
+        font-family: 'Oswald', sans-serif;
+        font-weight: 900;
+        font-size: 3rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: #1f2937;
         margin-bottom: 0.5rem;
+        margin-top: 1rem;
     }
     .centered-sub {
         text-align: center;
-        font-size: 1.2rem;
-        color: #666;
+        font-size: 1.1rem;
+        font-weight: 500;
+        color: #6b7280;
         margin-bottom: 2rem;
     }
 </style>
@@ -123,7 +130,8 @@ if not pits or not trucks:
 with st.sidebar:
     st.header("Job Details")
     address = st.text_area("Project Address", value="", placeholder="e.g., 5600 W 8600 S, West Jordan UT")
-    tons = st.number_input("Tons Needed", min_value=1, value=800, step=10)
+    # Using None to keep it empty by default
+    tons = st.number_input("Tons Needed", min_value=1, value=None, placeholder="e.g., 800", step=10)
     
     truck_options = ["Best Option (Compare Both)", "Side Dump", "10-Wheeler"]
     truck_choice = st.selectbox("Truck Type", truck_options)
@@ -138,6 +146,9 @@ with st.sidebar:
 if calc_button:
     if not address:
         st.warning("Please enter a project address.")
+        st.stop()
+    if not tons:
+        st.warning("Please enter the total tons needed.")
         st.stop()
         
     with st.spinner("Finding location..."):
