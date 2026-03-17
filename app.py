@@ -184,7 +184,7 @@ with st.sidebar:
     
     # Address Search
     address = st.text_area("Search Address", value="", placeholder="e.g., 5600 W 8600 S, West Jordan")
-    if st.button("Search on Map", use_container_width=True):
+    if st.button("Search on Map", width='stretch'):
         if address:
             with st.spinner("Finding location..."):
                 lat, lon, display_name = geocode_address(address)
@@ -211,7 +211,7 @@ with st.sidebar:
     material_choices = st.multiselect("Filter by Material", materials, placeholder="Select materials (leave empty for all)")
     
     st.divider()
-    calc_button = st.button("Calculate Best Price", type="primary", use_container_width=True)
+    calc_button = st.button("Calculate Best Price", type="primary", width='stretch')
 
 # Main Area Map
 st.subheader("📍 Select Job Site Location")
