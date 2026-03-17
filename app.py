@@ -180,8 +180,7 @@ with st.sidebar:
     
     # Get unique materials
     materials = sorted(list(set([p['Material'] for p in pits])))
-    materials.insert(0, "All Materials")
-    material_choice = st.selectbox("Filter by Material", materials)
+    material_choices = st.multiselect("Filter by Material", materials, placeholder="Select materials (leave empty for all)")
     
     calc_button = st.button("Calculate Best Price", type="primary")
 
@@ -211,11 +210,11 @@ if calc_button:
         
     # Filter pits
     filtered_pits = pits
-    if material_choice != "All Materials":
-        filtered_pits = [p for p in pits if p['Material'] == material_choice]
+    if material_choices:
+        filtered_pits = [p for p in pits if p['Material'] in material_choices]
         
     if not filtered_pits:
-        st.warning(f"No pits found offering '{material_choice}'.")
+        st.warning("No pits found for the selected materials.")
         st.stop()
 
     load_unload_hr = (LOAD_TIME_MIN + UNLOAD_TIME_MIN) / 60
