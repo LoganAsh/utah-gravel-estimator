@@ -103,9 +103,9 @@ except:
 # UI Starts Here
 st.markdown(f"""
 <style>
-    /* Background Image with a slight white overlay so text stays readable */
+    /* Background Image with a dark overlay so text stays readable */
     .stApp {{
-        background-image: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.90)), url("{bg_url}");
+        background-image: linear-gradient(rgba(17, 24, 39, 0.85), rgba(17, 24, 39, 0.92)), url("{bg_url}");
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
@@ -113,7 +113,7 @@ st.markdown(f"""
     
     /* Make the sidebar slightly translucent but distinct */
     [data-testid="stSidebar"] {{
-        background-color: rgba(240, 242, 246, 0.95);
+        background-color: rgba(31, 41, 55, 0.85);
     }}
 
     /* Strong, Professional Font */
@@ -131,7 +131,7 @@ st.markdown(f"""
         font-size: 3.5rem;
         text-transform: uppercase;
         letter-spacing: 1px;
-        color: #1f2937;
+        color: #f9fafb;
         margin-bottom: 0.5rem;
         margin-top: 1rem;
         line-height: 1.2;
@@ -142,7 +142,7 @@ st.markdown(f"""
         width: 100%;
         font-size: 1.1rem;
         font-weight: 500;
-        color: #6b7280;
+        color: #9ca3af;
         margin-bottom: 2rem;
     }}
     
