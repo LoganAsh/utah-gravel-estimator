@@ -15,7 +15,7 @@ LOAD_TIME_MIN = 15
 UNLOAD_TIME_MIN = 8 
 EFFICIENCY_FACTOR = 0.90 
 
-@st.cache_data
+# Load data without caching so CSV updates are immediate
 def load_data():
     pits = []
     pit_file = 'data/pits_utah.csv'
