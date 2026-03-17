@@ -245,7 +245,7 @@ if st.session_state.job_site_marker:
     ).add_to(m)
 
 # Render Map
-map_data = st_folium(m, height=400, use_container_width=True)
+map_data = st_folium(m, height=400,width='stretch')
 
 # Handle Map Clicks
 if map_data and map_data.get("last_clicked"):
@@ -341,7 +341,7 @@ if calc_button:
     st.markdown(f"*Assumptions: {LOAD_TIME_MIN}m load, {UNLOAD_TIME_MIN}m unload, {int(EFFICIENCY_FACTOR*100)}% efficiency, 10% truck speed penalty.*")
     
     # Display interactive dataframe
-    st.dataframe(df, use_container_width=True)
+    st.dataframe(df, width='stretch')
     
     # Highlight the absolute best option
     if not df.empty:
