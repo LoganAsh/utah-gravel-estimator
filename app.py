@@ -90,6 +90,19 @@ def get_real_route(lat1, lon1, lat2, lon2):
 # UI Starts Here
 st.markdown("""
 <style>
+    /* Background Image with a slight white overlay so text stays readable */
+    .stApp {
+        background-image: linear-gradient(rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.92)), url("https://images.unsplash.com/photo-1516246843873-9d12356b6fab?q=80&w=2000&auto=format&fit=crop");
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+    }
+    
+    /* Make the sidebar slightly translucent but distinct */
+    [data-testid="stSidebar"] {
+        background-color: rgba(240, 242, 246, 0.95);
+    }
+
     /* Strong, Professional Font */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Oswald:wght@800&display=swap');
     html, body, [class*="css"]  {
