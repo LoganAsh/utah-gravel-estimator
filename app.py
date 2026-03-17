@@ -5,6 +5,9 @@ import requests
 import time
 import os
 import pandas as pd
+import folium
+from streamlit_folium import st_folium
+import base64
 
 # Page Config
 st.set_page_config(page_title="Utah Aggregate Estimator", layout="wide")
@@ -87,8 +90,6 @@ def get_real_route(lat1, lon1, lat2, lon2):
     dist = haversine_distance(lat1, lon1, lat2, lon2)
     return dist, dist / 35.0
 
-import base64
-
 def get_base64_of_bin_file(bin_file):
     with open(bin_file, 'rb') as f:
         data = f.read()
@@ -168,11 +169,38 @@ if not pits or not trucks:
     st.error("Data files not found. Please ensure data/pits_utah.csv and data/trucks.csv exist.")
     st.stop()
 
+# State for the map
+if "map_center" not in st.session_state:
+    st.session_state.map_center = [40.6, -111.9] # Approx SL Valley
+if "job_site_marker" not in st.session_state:
+    st.session_state.job_site_marker = None
+if "job_address_name" not in st.session_state:
+    st.session_state.job_address_name = ""
+
 # Sidebar for inputs
 with st.sidebar:
-    st.header("Job Details")
-    address = st.text_area("Project Address", value="", placeholder="e.g., 5600 W 8600 S, West Jordan UT")
-    # Using None to keep it empty by default
+    st.header("1. Find Job Site")
+    st.write("Type an address OR click directly on the map.")
+    
+    # Address Search
+    address = st.text_area("Search Address", value="", placeholder="e.g., 5600 W 8600 S, West Jordan")
+    if st.button("Search on Map", use_container_width=True):
+        if address:
+            with st.spinner("Finding location..."):
+                lat, lon, display_name = geocode_address(address)
+                if lat:
+                    st.session_state.map_center = [lat, lon]
+                    st.session_state.job_site_marker = [lat, lon]
+                    st.session_state.job_address_name = display_name
+                    st.rerun()
+                else:
+                    st.error("Could not find that address.")
+        else:
+            st.warning("Please enter an address.")
+            
+    st.divider()
+            
+    st.header("2. Job Details")
     tons = st.number_input("Tons Needed", min_value=1, value=None, placeholder="e.g., 800", step=10)
     
     truck_options = ["Best Option (Compare Both)", "Side Dump", "10-Wheeler"]
@@ -182,27 +210,64 @@ with st.sidebar:
     materials = sorted(list(set([p['Material'] for p in pits])))
     material_choices = st.multiselect("Filter by Material", materials, placeholder="Select materials (leave empty for all)")
     
-    calc_button = st.button("Calculate Best Price", type="primary")
+    st.divider()
+    calc_button = st.button("Calculate Best Price", type="primary", use_container_width=True)
 
+# Main Area Map
+st.subheader("📍 Select Job Site Location")
+
+# Current Status
+if st.session_state.job_address_name:
+    st.info(f"**Selected Site:** {st.session_state.job_address_name}")
+elif st.session_state.job_site_marker:
+    lat, lon = st.session_state.job_site_marker
+    st.info(f"**Selected Site:** Custom Coordinates ({lat:.5f}, {lon:.5f})")
+
+m = folium.Map(location=st.session_state.map_center, zoom_start=11)
+
+# Add existing pits as markers
+for p in pits:
+    folium.CircleMarker(
+        location=[p['Latitude'], p['Longitude']],
+        radius=5,
+        popup=p['Pit Name'],
+        color="#f97316",
+        fill=True,
+        fill_color="#f97316"
+    ).add_to(m)
+
+# Add Job Site Marker
+if st.session_state.job_site_marker:
+    folium.Marker(
+        st.session_state.job_site_marker, 
+        tooltip="Job Site", 
+        icon=folium.Icon(color="red", icon="info-sign")
+    ).add_to(m)
+
+# Render Map
+map_data = st_folium(m, height=400, use_container_width=True)
+
+# Handle Map Clicks
+if map_data and map_data.get("last_clicked"):
+    click_lat = map_data["last_clicked"]["lat"]
+    click_lon = map_data["last_clicked"]["lng"]
+    new_marker = [click_lat, click_lon]
+    
+    if st.session_state.job_site_marker != new_marker:
+        st.session_state.job_site_marker = new_marker
+        st.session_state.job_address_name = "" # Clear previous address name since it's a raw click
+        st.rerun()
+
+# --- Calculate Logic ---
 if calc_button:
-    if not address:
-        st.warning("Please enter a project address.")
+    if not st.session_state.job_site_marker:
+        st.warning("Please click on the map or search for an address to set the job site.")
         st.stop()
     if not tons:
-        st.warning("Please enter the total tons needed.")
+        st.warning("Please enter the total tons needed in the sidebar.")
         st.stop()
         
-    with st.spinner("Finding location..."):
-        lat, lon, display_name = geocode_address(address)
-        
-    if not lat:
-        st.error("Could not find that address. Try adding 'Utah' or a ZIP code.")
-        st.stop()
-        
-    st.success(f"📍 **Location Found:** {display_name}")
-    
-    # Show map pin
-    st.map(pd.DataFrame({'lat': [lat], 'lon': [lon]}), zoom=12)
+    lat, lon = st.session_state.job_site_marker
     
     # Filter trucks
     selected_trucks = trucks
@@ -223,6 +288,9 @@ if calc_button:
     load_unload_hr = (LOAD_TIME_MIN + UNLOAD_TIME_MIN) / 60
     
     results = []
+    
+    st.markdown("---")
+    st.subheader(f"📊 Best Options for {tons} Tons")
     
     progress_bar = st.progress(0)
     status_text = st.empty()
@@ -270,7 +338,6 @@ if calc_button:
     # Adjust index to start at 1
     df.index = df.index + 1
     
-    st.subheader("🏆 Top 10 Options")
     st.markdown(f"*Assumptions: {LOAD_TIME_MIN}m load, {UNLOAD_TIME_MIN}m unload, {int(EFFICIENCY_FACTOR*100)}% efficiency, 10% truck speed penalty.*")
     
     # Display interactive dataframe
@@ -279,4 +346,4 @@ if calc_button:
     # Highlight the absolute best option
     if not df.empty:
         best = df.iloc[0]
-        st.info(f"**Best Value:** {best['Pit']} using a {best['Truck']} for **{best['Del $/Ton']}** delivered.")
+        st.success(f"**Best Value:** {best['Pit']} using a {best['Truck']} for **{best['Del $/Ton']}** delivered.")
