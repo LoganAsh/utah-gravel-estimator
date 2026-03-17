@@ -87,29 +87,42 @@ def get_real_route(lat1, lon1, lat2, lon2):
     dist = haversine_distance(lat1, lon1, lat2, lon2)
     return dist, dist / 35.0
 
+import base64
+
+def get_base64_of_bin_file(bin_file):
+    with open(bin_file, 'rb') as f:
+        data = f.read()
+    return base64.b64encode(data).decode()
+
+try:
+    bg_img = get_base64_of_bin_file("background.jpg")
+    bg_url = f"data:image/jpeg;base64,{bg_img}"
+except:
+    bg_url = "https://images.unsplash.com/photo-1518002171953-a080ee817e1f?q=80&w=2000&auto=format&fit=crop"
+
 # UI Starts Here
-st.markdown("""
+st.markdown(f"""
 <style>
     /* Background Image with a slight white overlay so text stays readable */
-    .stApp {
-        background-image: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.90)), url("https://images.unsplash.com/photo-1518002171953-a080ee817e1f?q=80&w=2000&auto=format&fit=crop");
+    .stApp {{
+        background-image: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.90)), url("{bg_url}");
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
-    }
+    }}
     
     /* Make the sidebar slightly translucent but distinct */
-    [data-testid="stSidebar"] {
+    [data-testid="stSidebar"] {{
         background-color: rgba(240, 242, 246, 0.95);
-    }
+    }}
 
     /* Strong, Professional Font */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Oswald:wght@800&display=swap');
-    html, body, [class*="css"]  {
+    html, body, [class*="css"]  {{
         font-family: 'Inter', sans-serif;
-    }
+    }}
     /* Center the headers */
-    .centered-header {
+    .centered-header {{
         text-align: center !important;
         display: block;
         width: 100%;
@@ -122,8 +135,8 @@ st.markdown("""
         margin-bottom: 0.5rem;
         margin-top: 1rem;
         line-height: 1.2;
-    }
-    .centered-sub {
+    }}
+    .centered-sub {{
         text-align: center !important;
         display: block;
         width: 100%;
@@ -131,18 +144,18 @@ st.markdown("""
         font-weight: 500;
         color: #6b7280;
         margin-bottom: 2rem;
-    }
+    }}
     
     /* Mobile adjustments */
-    @media (max-width: 768px) {
-        .centered-header {
+    @media (max-width: 768px) {{
+        .centered-header {{
             font-size: 2.2rem;
             letter-spacing: 0px;
-        }
-        .centered-sub {
+        }}
+        .centered-sub {{
             font-size: 1rem;
-        }
-    }
+        }}
+    }}
 </style>
 """, unsafe_allow_html=True)
 
