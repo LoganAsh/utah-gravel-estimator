@@ -201,6 +201,9 @@ if calc_button:
         
     st.success(f"📍 **Location Found:** {display_name}")
     
+    # Show map pin
+    st.map(pd.DataFrame({'lat': [lat], 'lon': [lon]}), zoom=12)
+    
     # Filter trucks
     selected_trucks = trucks
     if truck_choice == "Side Dump":
