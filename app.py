@@ -332,9 +332,30 @@ if st.session_state.get('do_calc', False):
         cycle_time_hr = raw_cycle_hr / EFFICIENCY_FACTOR
         
         for truck in selected_trucks:
+            # 1. Total trips required (always rounds UP to the nearest whole trip)
             trips = math.ceil(tons / truck['Capacity_Tons'])
-            haul_cost_per_ton = (cycle_time_hr * truck['Hourly_Rate']) / truck['Capacity_Tons']
-            total_trucking_cost = haul_cost_per_ton * tons
+            
+            # 2. Max trips a truck can do in an 8-hour shift
+            max_trips_per_day = math.floor(8.0 / cycle_time_hr)
+            if max_trips_per_day < 1:
+                max_trips_per_day = 1 # If one trip takes more than 8 hours, it's a 1-trip day
+            
+            # 3. How many full 8-hour truck shifts, plus the leftover trips
+            full_shifts = trips // max_trips_per_day
+            leftover_trips = trips % max_trips_per_day
+            
+            # 4. Round up hours to the nearest half-hour per shift
+            def round_half_hr(hrs):
+                return math.ceil(hrs * 2) / 2.0
+                
+            full_shift_hrs = round_half_hr(max_trips_per_day * cycle_time_hr)
+            leftover_hrs = round_half_hr(leftover_trips * cycle_time_hr) if leftover_trips > 0 else 0.0
+            
+            # 5. Calculate total billed trucking hours
+            total_billed_hrs = (full_shifts * full_shift_hrs) + leftover_hrs
+            
+            # 6. Calculate total costs
+            total_trucking_cost = total_billed_hrs * truck['Hourly_Rate']
             material_cost = pit['Price_Per_Ton'] * tons
             total_cost = material_cost + total_trucking_cost
             
