@@ -214,10 +214,10 @@ with st.sidebar:
     material_choices = st.multiselect("Filter by Material", materials, placeholder="Select materials (leave empty for all)")
     
     st.divider()
-    st.header("3. Trucking Parameters")
-    load_time_min = st.slider("Load Time (mins)", min_value=5, max_value=60, value=15, step=5)
-    unload_time_min = st.slider("Unload Time (mins)", min_value=5, max_value=60, value=8, step=1)
-    min_hours_per_truck = st.number_input("Minimum Hours per Truck", min_value=0.0, max_value=8.0, value=1.0, step=0.5)
+    with st.expander("⚙️ **3. Trucking Parameters**", expanded=False):
+        load_time_min = st.slider("Load Time (mins)", min_value=5, max_value=60, value=15, step=5)
+        unload_time_min = st.slider("Unload Time (mins)", min_value=5, max_value=60, value=8, step=1)
+        min_hours_per_truck = st.number_input("Minimum Hours per Truck", min_value=0.0, max_value=8.0, value=1.0, step=0.5)
 
     st.divider()
     calc_button = st.button("Calculate Best Price", type="primary", use_container_width=True)
