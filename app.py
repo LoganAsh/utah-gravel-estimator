@@ -176,6 +176,10 @@ if "job_site_marker" not in st.session_state:
     st.session_state.job_site_marker = None
 if "job_address_name" not in st.session_state:
     st.session_state.job_address_name = ""
+if "map_expanded" not in st.session_state:
+    st.session_state.map_expanded = True
+if "collapse_sidebar" not in st.session_state:
+    st.session_state.collapse_sidebar = False
 
 # Sidebar for inputs
 with st.sidebar:
@@ -211,56 +215,74 @@ with st.sidebar:
     material_choices = st.multiselect("Filter by Material", materials, placeholder="Select materials (leave empty for all)")
     
     st.divider()
-    calc_button = st.button("Calculate Best Price", type="primary", width='stretch')
+    calc_button = st.button("Calculate Best Price", type="primary", use_container_width=True)
 
 # Main Area Map
-st.subheader("📍 Select Job Site Location")
-
-# Current Status
-if st.session_state.job_address_name:
-    st.info(f"**Selected Site:** {st.session_state.job_address_name}")
-elif st.session_state.job_site_marker:
-    lat, lon = st.session_state.job_site_marker
-    st.info(f"**Selected Site:** Custom Coordinates ({lat:.5f}, {lon:.5f})")
-
-m = folium.Map(location=st.session_state.map_center, zoom_start=11)
-
-# Add existing pits as markers
-for p in pits:
-    folium.CircleMarker(
-        location=[p['Latitude'], p['Longitude']],
-        radius=5,
-        popup=p['Pit Name'],
-        color="#f97316",
-        fill=True,
-        fill_color="#f97316"
-    ).add_to(m)
-
-# Add Job Site Marker
-if st.session_state.job_site_marker:
-    folium.Marker(
-        st.session_state.job_site_marker, 
-        tooltip="Job Site", 
-        icon=folium.Icon(color="red", icon="info-sign")
-    ).add_to(m)
-
-# Render Map
-map_data = st_folium(m, height=400, width='stretch', returned_objects=["last_clicked"])
-
-# Handle Map Clicks
-if map_data and map_data.get("last_clicked"):
-    click_lat = map_data["last_clicked"]["lat"]
-    click_lon = map_data["last_clicked"]["lng"]
-    new_marker = [click_lat, click_lon]
+with st.expander("📍 **Select Job Site Location (Map)**", expanded=st.session_state.map_expanded):
+    # Current Status
+    if st.session_state.job_address_name:
+        st.info(f"**Selected Site:** {st.session_state.job_address_name}")
+    elif st.session_state.job_site_marker:
+        lat, lon = st.session_state.job_site_marker
+        st.info(f"**Selected Site:** Custom Coordinates ({lat:.5f}, {lon:.5f})")
     
-    if st.session_state.job_site_marker != new_marker:
-        st.session_state.job_site_marker = new_marker
-        st.session_state.job_address_name = "" # Clear previous address name since it's a raw click
-        st.rerun()
+    m = folium.Map(location=st.session_state.map_center, zoom_start=11)
+    
+    # Add existing pits as markers
+    for p in pits:
+        folium.CircleMarker(
+            location=[p['Latitude'], p['Longitude']],
+            radius=5,
+            popup=p['Pit Name'],
+            color="#f97316",
+            fill=True,
+            fill_color="#f97316"
+        ).add_to(m)
+    
+    # Add Job Site Marker
+    if st.session_state.job_site_marker:
+        folium.Marker(
+            st.session_state.job_site_marker, 
+            tooltip="Job Site", 
+            icon=folium.Icon(color="red", icon="info-sign")
+        ).add_to(m)
+    
+    # Render Map
+    map_data = st_folium(m, height=400, width='stretch', returned_objects=["last_clicked"])
+    
+    # Handle Map Clicks
+    if map_data and map_data.get("last_clicked"):
+        click_lat = map_data["last_clicked"]["lat"]
+        click_lon = map_data["last_clicked"]["lng"]
+        new_marker = [click_lat, click_lon]
+        
+        if st.session_state.job_site_marker != new_marker:
+            st.session_state.job_site_marker = new_marker
+            st.session_state.job_address_name = "" # Clear previous address name since it's a raw click
+            st.session_state.map_expanded = True
+            st.rerun()
 
 # --- Calculate Logic ---
 if calc_button:
     st.session_state.do_calc = True
+    st.session_state.map_expanded = False
+    st.session_state.collapse_sidebar = True
+    st.rerun()
+
+import streamlit.components.v1 as components
+if st.session_state.get('collapse_sidebar', False):
+    components.html(
+        """
+        <script>
+            var elements = window.parent.document.querySelectorAll('button[kind="header"]');
+            var btn = Array.from(elements).find(el => el.getAttribute('data-testid') === 'baseButton-header' || el.querySelector('svg'));
+            if (btn) { btn.click(); }
+        </script>
+        """,
+        height=0,
+        width=0
+    )
+    st.session_state.collapse_sidebar = False
 
 if st.session_state.get('do_calc', False):
     if not st.session_state.job_site_marker:
