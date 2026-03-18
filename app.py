@@ -245,7 +245,7 @@ if st.session_state.job_site_marker:
     ).add_to(m)
 
 # Render Map
-map_data = st_folium(m, height=400,width='stretch')
+map_data = st_folium(m, height=400, width='stretch', returned_objects=["last_clicked"])
 
 # Handle Map Clicks
 if map_data and map_data.get("last_clicked"):
@@ -260,11 +260,16 @@ if map_data and map_data.get("last_clicked"):
 
 # --- Calculate Logic ---
 if calc_button:
+    st.session_state.do_calc = True
+
+if st.session_state.get('do_calc', False):
     if not st.session_state.job_site_marker:
         st.warning("Please click on the map or search for an address to set the job site.")
+        st.session_state.do_calc = False
         st.stop()
     if not tons:
         st.warning("Please enter the total tons needed in the sidebar.")
+        st.session_state.do_calc = False
         st.stop()
         
     lat, lon = st.session_state.job_site_marker
