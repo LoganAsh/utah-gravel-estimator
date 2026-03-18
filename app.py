@@ -14,8 +14,7 @@ st.set_page_config(page_title="Utah Aggregate Estimator", layout="wide")
 
 # Constants
 AVG_SPEED_MPH = 35 
-LOAD_TIME_MIN = 15   
-UNLOAD_TIME_MIN = 8 
+# Constants removed from here, moved to sidebar 
 EFFICIENCY_FACTOR = 0.90 
 
 # Load data without caching so CSV updates are immediate
@@ -215,6 +214,12 @@ with st.sidebar:
     material_choices = st.multiselect("Filter by Material", materials, placeholder="Select materials (leave empty for all)")
     
     st.divider()
+    st.header("3. Trucking Parameters")
+    load_time_min = st.slider("Load Time (mins)", min_value=5, max_value=60, value=15, step=5)
+    unload_time_min = st.slider("Unload Time (mins)", min_value=5, max_value=60, value=8, step=1)
+    min_hours_per_truck = st.number_input("Minimum Hours per Truck", min_value=0.0, max_value=8.0, value=1.0, step=0.5)
+
+    st.divider()
     calc_button = st.button("Calculate Best Price", type="primary", use_container_width=True)
 
 # Main Area Map
@@ -312,7 +317,7 @@ if st.session_state.get('do_calc', False):
         st.warning("No pits found for the selected materials.")
         st.stop()
 
-    load_unload_hr = (LOAD_TIME_MIN + UNLOAD_TIME_MIN) / 60
+    load_unload_hr = (load_time_min + unload_time_min) / 60
     
     results = []
     
@@ -349,7 +354,12 @@ if st.session_state.get('do_calc', False):
                 return math.ceil(hrs * 2) / 2.0
                 
             full_shift_hrs = round_half_hr(max_trips_per_day * cycle_time_hr)
+            if full_shifts > 0 and full_shift_hrs < min_hours_per_truck:
+                full_shift_hrs = min_hours_per_truck
+                
             leftover_hrs = round_half_hr(leftover_trips * cycle_time_hr) if leftover_trips > 0 else 0.0
+            if leftover_hrs > 0 and leftover_hrs < min_hours_per_truck:
+                leftover_hrs = min_hours_per_truck
             
             # 5. Calculate total billed trucking hours
             total_billed_hrs = (full_shifts * full_shift_hrs) + leftover_hrs
@@ -359,6 +369,8 @@ if st.session_state.get('do_calc', False):
             material_cost = pit['Price_Per_Ton'] * tons
             total_cost = material_cost + total_trucking_cost
             
+            trucking_cost_per_ton = total_trucking_cost / tons
+            
             results.append({
                 'Pit': pit['Pit Name'],
                 'Material': pit['Material'],
@@ -366,6 +378,7 @@ if st.session_state.get('do_calc', False):
                 'Dist (mi)': round(dist, 1),
                 'Cycle (min)': int(cycle_time_hr * 60),
                 'Base $/Ton': f"${pit['Price_Per_Ton']:.2f}",
+                'Frt $/Ton': f"${trucking_cost_per_ton:.2f}",
                 'Del $/Ton': total_cost / tons, # Keep as float for sorting
                 'Total Cost': total_cost
             })
@@ -386,7 +399,7 @@ if st.session_state.get('do_calc', False):
     # Adjust index to start at 1
     df.index = df.index + 1
     
-    st.markdown(f"*Assumptions: {LOAD_TIME_MIN}m load, {UNLOAD_TIME_MIN}m unload, {int(EFFICIENCY_FACTOR*100)}% efficiency, 10% truck speed penalty.*")
+    st.markdown(f"*Assumptions: {load_time_min}m load, {unload_time_min}m unload, {min_hours_per_truck}hr minimum charge, {int(EFFICIENCY_FACTOR*100)}% efficiency, 10% truck speed penalty.*")
     
     # Display interactive dataframe
     st.dataframe(df, width='stretch')
@@ -395,3 +408,12 @@ if st.session_state.get('do_calc', False):
     if not df.empty:
         best = df.iloc[0]
         st.success(f"**Best Value:** {best['Pit']} using a {best['Truck']} for **{best['Del $/Ton']}** delivered.")
+        
+        # Add CSV Download Button
+        csv_data = df.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="📥 Download Estimate (CSV)",
+            data=csv_data,
+            file_name=f"aggregate_estimate_{tons}tons.csv",
+            mime="text/csv"
+        )
