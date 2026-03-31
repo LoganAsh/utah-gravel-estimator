@@ -15,7 +15,8 @@ st.set_page_config(page_title="Utah Aggregate Estimator", layout="wide")
 # Constants
 AVG_SPEED_MPH = 35 
 # Constants removed from here, moved to sidebar 
-EFFICIENCY_FACTOR = 0.90 
+IMPORT_EFFICIENCY = 0.88
+EXPORT_EFFICIENCY = 0.90 # Can adjust this later if needed
 
 # Load data without caching so CSV updates are immediate
 def load_data():
@@ -372,7 +373,8 @@ if st.session_state.get('do_calc', False):
         
         travel_time_hr = one_way_time_hr * 2
         raw_cycle_hr = travel_time_hr + load_unload_hr
-        cycle_time_hr = raw_cycle_hr / EFFICIENCY_FACTOR
+        efficiency_factor = IMPORT_EFFICIENCY if job_type == "Import (Delivery)" else EXPORT_EFFICIENCY
+        cycle_time_hr = raw_cycle_hr / efficiency_factor
         
         for truck in selected_trucks:
             # 1. Total trips required (always rounds UP to the nearest whole trip)
@@ -437,7 +439,7 @@ if st.session_state.get('do_calc', False):
     # Adjust index to start at 1
     df.index = df.index + 1
     
-    st.markdown(f"*Assumptions: {load_time_min}m load, {unload_time_min}m unload, {min_hours_per_truck}hr minimum charge, {int(EFFICIENCY_FACTOR*100)}% efficiency, 10% truck speed penalty.*")
+    st.markdown(f"*Assumptions: {load_time_min}m load, {unload_time_min}m unload, {min_hours_per_truck}hr minimum charge, {int(efficiency_factor*100)}% efficiency, 10% truck speed penalty.*")
     
     # Display interactive dataframe
     st.dataframe(df, width='stretch')
