@@ -89,20 +89,25 @@ def haversine_distance(lat1, lon1, lat2, lon2):
 @st.cache_data(show_spinner=False)
 def get_real_route(lat1, lon1, lat2, lon2):
     url = f"http://router.project-osrm.org/route/v1/driving/{lon1},{lat1};{lon2},{lat2}?overview=false"
+    headers = {"User-Agent": "UtahGravelEstimator/1.0"}
     try:
         time.sleep(0.5)
-        resp = requests.get(url, timeout=5)
+        resp = requests.get(url, headers=headers, timeout=5)
         if resp.status_code == 200:
             data = resp.json()
             if data['code'] == 'Ok':
                 route = data['routes'][0]
                 dist_miles = route['distance'] / 1609.34
-                duration_hr = (route['duration'] / 3600.0) * 1.10 # 10% truck penalty
-                return dist_miles, duration_hr
+                duration_hr = (route['duration'] / 3600.0) * 1.20 # 20% truck penalty for real roads
+                return dist_miles, duration_hr, True
     except Exception:
         pass
-    dist = haversine_distance(lat1, lon1, lat2, lon2)
-    return dist, dist / 35.0
+    
+    # Fallback if OSRM is down: Haversine straight-line distance
+    # We multiply by 1.3 to account for roads not being perfectly straight
+    dist = haversine_distance(lat1, lon1, lat2, lon2) * 1.3
+    # Average speed of 30 MPH for heavy trucks on surface streets/highways combined
+    return dist, dist / 30.0, False
 
 def get_base64_of_bin_file(bin_file):
     with open(bin_file, 'rb') as f:
@@ -366,11 +371,16 @@ if st.session_state.get('do_calc', False):
     status_text = st.empty()
     
     total_facs = len(active_facilities)
+    used_fallback = False
+    
     for i, fac in enumerate(active_facilities):
         fac_name = fac[facility_name_key]
         status_text.text(f"Routing to {fac_name} ({i+1}/{total_facs})...")
-        dist, one_way_time_hr = get_real_route(lat, lon, fac['Latitude'], fac['Longitude'])
+        dist, one_way_time_hr, is_real_route = get_real_route(lat, lon, fac['Latitude'], fac['Longitude'])
         
+        if not is_real_route:
+            used_fallback = True
+            
         travel_time_hr = one_way_time_hr * 2
         raw_cycle_hr = travel_time_hr + load_unload_hr
         efficiency_factor = IMPORT_EFFICIENCY if job_type == "Import (Delivery)" else EXPORT_EFFICIENCY
@@ -439,7 +449,10 @@ if st.session_state.get('do_calc', False):
     # Adjust index to start at 1
     df.index = df.index + 1
     
-    st.markdown(f"*Assumptions: {load_time_min}m load, {unload_time_min}m unload, {min_hours_per_truck}hr minimum charge, {int(efficiency_factor*100)}% efficiency, 10% truck speed penalty.*")
+    if used_fallback:
+        st.warning("⚠️ **Live Navigation Servers Down.** Results below are using straight-line distance estimates (+30% circuity factor at 30 MPH).")
+        
+    st.markdown(f"*Assumptions: {load_time_min}m load, {unload_time_min}m unload, {min_hours_per_truck}hr minimum charge, {int(efficiency_factor*100)}% efficiency, 20% truck speed penalty.*")
     
     # Display interactive dataframe
     st.dataframe(df, width='stretch')
