@@ -33,6 +33,20 @@ def load_data():
                 except ValueError:
                     continue
 
+    dumps = []
+    dump_file = 'data/dumps_utah.csv'
+    if os.path.exists(dump_file):
+        with open(dump_file, 'r') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                try:
+                    row['Price_Per_Ton'] = float(row['Price_Per_Ton'])
+                    row['Latitude'] = float(row['Latitude'])
+                    row['Longitude'] = float(row['Longitude'])
+                    dumps.append(row)
+                except ValueError:
+                    continue
+
     trucks = []
     truck_file = 'data/trucks.csv'
     if os.path.exists(truck_file):
@@ -46,7 +60,7 @@ def load_data():
                 except ValueError:
                     continue
                     
-    return pits, trucks
+    return pits, dumps, trucks
 
 @st.cache_data(show_spinner=False)
 def geocode_address(address):
@@ -162,7 +176,7 @@ st.markdown(f"""
 st.markdown("<h1 class='centered-header'>Utah Aggregate Estimator</h1>", unsafe_allow_html=True)
 st.markdown("<div class='centered-sub'>Calculate the most cost-effective aggregate delivery options using live routing.</div>", unsafe_allow_html=True)
 
-pits, trucks = load_data()
+pits, dumps, trucks = load_data()
 
 if not pits or not trucks:
     st.error("Data files not found. Please ensure data/pits_utah.csv and data/trucks.csv exist.")
@@ -204,13 +218,23 @@ with st.sidebar:
     st.divider()
             
     st.header("2. Job Details")
-    tons = st.number_input("Tons Needed", min_value=1, value=None, placeholder="e.g., 800", step=10)
+    job_type = st.radio("Job Type", ["Import (Delivery)", "Export (Haul-Off)"], horizontal=True)
+    
+    tons_label = "Tons Needed" if job_type == "Import (Delivery)" else "Tons to Haul Off"
+    tons = st.number_input(tons_label, min_value=1, value=None, placeholder="e.g., 800", step=10)
     
     truck_options = ["Best Option (Compare Both)", "Side Dump", "10-Wheeler"]
     truck_choice = st.selectbox("Truck Type", truck_options)
     
-    # Get unique materials
-    materials = sorted(list(set([p['Material'] for p in pits])))
+    # Get unique materials based on job type
+    if job_type == "Import (Delivery)":
+        materials = sorted(list(set([p['Material'] for p in pits])))
+    else:
+        # Predefined list for export if dumps are empty, otherwise from dumps
+        export_defaults = ["Clean Fill", "Topsoil (Unscreened)", "Topsoil (Screened)", "Concrete (Clean)", "Concrete (Dirty/Reinforced)", "Asphalt (Chunked)", "Asphalt (Milled)"]
+        dump_mats = sorted(list(set([d['Material'] for d in dumps])))
+        materials = dump_mats if dump_mats else export_defaults
+        
     material_choices = st.multiselect("Filter by Material", materials, placeholder="Select materials (leave empty for all)")
     
     st.divider()
@@ -242,6 +266,16 @@ with st.expander("📍 **Select Job Site Location (Map)**", expanded=st.session_
             color="#f97316",
             fill=True,
             fill_color="#f97316"
+        ).add_to(m)
+        
+    for d in dumps:
+        folium.CircleMarker(
+            location=[d['Latitude'], d['Longitude']],
+            radius=5,
+            popup=d['Dump Name'],
+            color="#3b82f6",
+            fill=True,
+            fill_color="#3b82f6"
         ).add_to(m)
     
     # Add Job Site Marker
@@ -308,13 +342,16 @@ if st.session_state.get('do_calc', False):
     elif truck_choice == "10-Wheeler":
         selected_trucks = [t for t in trucks if "10-Wheeler" in t['Type']]
         
-    # Filter pits
-    filtered_pits = pits
+    # Filter facilities (pits or dumps)
+    active_facilities = pits if job_type == "Import (Delivery)" else dumps
+    facility_name_key = "Pit Name" if job_type == "Import (Delivery)" else "Dump Name"
+    
     if material_choices:
-        filtered_pits = [p for p in pits if p['Material'] in material_choices]
+        active_facilities = [f for f in active_facilities if f['Material'] in material_choices]
         
-    if not filtered_pits:
-        st.warning("No pits found for the selected materials.")
+    if not active_facilities:
+        facility_type = "pits" if job_type == "Import (Delivery)" else "dump sites"
+        st.warning(f"No {facility_type} found for the selected materials.")
         st.stop()
 
     load_unload_hr = (load_time_min + unload_time_min) / 60
@@ -327,10 +364,11 @@ if st.session_state.get('do_calc', False):
     progress_bar = st.progress(0)
     status_text = st.empty()
     
-    total_pits = len(filtered_pits)
-    for i, pit in enumerate(filtered_pits):
-        status_text.text(f"Routing to {pit['Pit Name']} ({i+1}/{total_pits})...")
-        dist, one_way_time_hr = get_real_route(lat, lon, pit['Latitude'], pit['Longitude'])
+    total_facs = len(active_facilities)
+    for i, fac in enumerate(active_facilities):
+        fac_name = fac[facility_name_key]
+        status_text.text(f"Routing to {fac_name} ({i+1}/{total_facs})...")
+        dist, one_way_time_hr = get_real_route(lat, lon, fac['Latitude'], fac['Longitude'])
         
         travel_time_hr = one_way_time_hr * 2
         raw_cycle_hr = travel_time_hr + load_unload_hr
@@ -366,18 +404,18 @@ if st.session_state.get('do_calc', False):
             
             # 6. Calculate total costs
             total_trucking_cost = total_billed_hrs * truck['Hourly_Rate']
-            material_cost = pit['Price_Per_Ton'] * tons
+            material_cost = fac['Price_Per_Ton'] * tons
             total_cost = material_cost + total_trucking_cost
             
             trucking_cost_per_ton = total_trucking_cost / tons
             
             results.append({
-                'Pit': pit['Pit Name'],
-                'Material': pit['Material'],
+                'Facility': fac_name,
+                'Material': fac['Material'],
                 'Truck': truck['Type'],
                 'Dist (mi)': round(dist, 1),
                 'Cycle (min)': int(cycle_time_hr * 60),
-                'Base $/Ton': f"${pit['Price_Per_Ton']:.2f}",
+                'Base $/Ton': f"${fac['Price_Per_Ton']:.2f}",
                 'Frt $/Ton': f"${trucking_cost_per_ton:.2f}",
                 'Del $/Ton': total_cost / tons, # Keep as float for sorting
                 'Total Cost': total_cost
@@ -407,7 +445,7 @@ if st.session_state.get('do_calc', False):
     # Highlight the absolute best option
     if not df.empty:
         best = df.iloc[0]
-        st.success(f"**Best Value:** {best['Pit']} using a {best['Truck']} for **{best['Del $/Ton']}** delivered.")
+        st.success(f"**Best Value:** {best['Facility']} using a {best['Truck']} for **{best['Del $/Ton']}** total.")
         
         # Add CSV Download Button
         csv_data = df.to_csv(index=False).encode('utf-8')
