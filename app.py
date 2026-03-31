@@ -421,7 +421,7 @@ if st.session_state.get('do_calc', False):
                 'Total Cost': total_cost
             })
             
-        progress_bar.progress((i + 1) / total_pits)
+        progress_bar.progress((i + 1) / total_facs)
         
     status_text.empty()
     progress_bar.empty()
