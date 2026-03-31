@@ -104,8 +104,13 @@ def get_real_route(lat1, lon1, lat2, lon2):
         pass
     
     # Fallback if OSRM is down: Haversine straight-line distance
-    # We multiply by 1.3 to account for roads not being perfectly straight
-    dist = haversine_distance(lat1, lon1, lat2, lon2) * 1.3
+    raw_dist = haversine_distance(lat1, lon1, lat2, lon2)
+    # Apply circuity factor based on distance: +50% for <10mi, +30% for >=10mi
+    if raw_dist < 10.0:
+        dist = raw_dist * 1.5
+    else:
+        dist = raw_dist * 1.3
+        
     # Average speed of 30 MPH for heavy trucks on surface streets/highways combined
     return dist, dist / 30.0, False
 
@@ -450,7 +455,7 @@ if st.session_state.get('do_calc', False):
     df.index = df.index + 1
     
     if used_fallback:
-        st.warning("⚠️ **Live Navigation Servers Down.** Results below are using straight-line distance estimates (+30% circuity factor at 30 MPH).")
+        st.warning("⚠️ **Live Navigation Servers Down.** Results below are using straight-line distance estimates (+50% circuity for <10mi, +30% for >10mi, at 30 MPH).")
         
     st.markdown(f"*Assumptions: {load_time_min}m load, {unload_time_min}m unload, {min_hours_per_truck}hr minimum charge, {int(efficiency_factor*100)}% efficiency, 20% truck speed penalty.*")
     
