@@ -14,7 +14,7 @@ Geneva Rock (Pelican Point Pit),"1565 N Redwood Road, Saratoga Springs",A1b,7.75
 Staker Parson (Beef Hollow Pit),"2550 Porter Rockwell Rd, Bluffdale",A1b,6.75,40.474308,-111.978574
 Staker Parson (Lehi West Pit),"11700 N Frontage Rd, Lehi",A1b,8.05,40.451429,-111.911819
 Staker Parson (Keigley Pit),"12370 S West Mt Rd, Payson",A1b,6.95,40.011948,-111.801505
-Kilgore (Parley's Pit),Parleys Canyon (Approx),A1b,4.25,40.715,-111.8
+Kilgore (Parley's Pit),Parleys Canyon (Approx),A1b,4.25,40.72504,-111.77245
 Maverick Rock Products,"491 US-6, Genola",Pea Gravel,9.95,39.980469,-111.832961
 Grey Cliffs Rock ,"648 UT-198, Santaquin","3/4"" Gravel",13.0,39.986234,-111.76045
 Maverick Rock Products,"491 US-6, Genola","3/4"" Gravel",17.45,39.980469,-111.832961
@@ -23,7 +23,7 @@ Geneva Rock (Pelican Point Pit),"1565 N Redwood Road, Saratoga Springs","3/4"" G
 Staker Parson (Beef Hollow Pit),"2550 Porter Rockwell Rd, Bluffdale","3/4"" Gravel",20.75,40.474308,-111.978574
 Staker Parson (Lehi West Pit),"11700 N Frontage Rd, Lehi","3/4"" Gravel",20.5,40.451429,-111.911819
 Staker Parson (Keigley Pit),"12370 S West Mt Rd, Payson","3/4"" Gravel",18.95,40.011948,-111.801505
-Kilgore (Parley's Pit),Parleys Canyon (Approx),"3/4"" Gravel",18.5,40.715,-111.8
+Kilgore (Parley's Pit),Parleys Canyon (Approx),"3/4"" Gravel",18.5,40.72504,-111.77245
 Lakeview Rock Products,"2380 Beck St, SLC","1"" Gravel",18.0,40.822108,-111.915022
 Grey Cliffs Rock ,"648 UT-198, Santaquin","1"" Gravel",13.0,39.986234,-111.76045
 Maverick Rock Products,"491 US-6, Genola","1"" Gravel",17.45,39.980469,-111.832961
@@ -33,7 +33,7 @@ Staker Parson (Beef Hollow Pit),"2550 Porter Rockwell Rd, Bluffdale","1"" Gravel
 Staker Parson (Point East Pit),"15589 Minuteman Dr, Draper","1"" Gravel",20.15,40.462556,-111.912076
 Staker Parson (Lehi West Pit),"11700 N Frontage Rd, Lehi","1"" Gravel",20.5,40.451429,-111.911819
 Staker Parson (Keigley Pit),"12370 S West Mt Rd, Payson","1"" Gravel",18.95,40.011948,-111.801505
-Kilgore (Parley's Pit),Parleys Canyon (Approx),"1"" Gravel",18.5,40.715,-111.8
+Kilgore (Parley's Pit),Parleys Canyon (Approx),"1"" Gravel",18.5,40.72504,-111.77245
 Maverick Rock Products,"491 US-6, Genola","1.5"" Gravel",18.95,39.980469,-111.832961
 Geneva Rock (Hansen Pit),"15547 Minuteman Dr, Draper","1.5"" Gravel",21.35,40.467977,-111.908433
 Geneva Rock (Pelican Point Pit),"1565 N Redwood Road, Saratoga Springs","1.5"" Gravel",17.2,40.261959,-111.868774
@@ -62,7 +62,7 @@ Utah Sand and Gravel,"1264 Beck St, SLC",Commercial Road Base,9.0,40.797036,-111
 Staker Parson (Beef Hollow Pit),"2550 Porter Rockwell Rd, Bluffdale",Commercial Road Base,7.8,40.474308,-111.978574
 Staker Parson (Lehi West Pit),"11700 N Frontage Rd, Lehi",Commercial Road Base,9.75,40.451429,-111.911819
 Staker Parson (Keigley Pit),"12370 S West Mt Rd, Payson",Commercial Road Base,8.15,40.011948,-111.801505
-Kilgore (Parley's Pit),Parleys Canyon (Approx),Commercial Road Base,10.25,40.715,-111.8
+Kilgore (Parley's Pit),Parleys Canyon (Approx),Commercial Road Base,10.25,40.72504,-111.77245
 Grey Cliffs Rock ,"648 UT-198, Santaquin",State Spec Road Base,9.0,39.986234,-111.76045
 Maverick Rock Products,"491 US-6, Genola",State Spec Road Base,10.95,39.980469,-111.832961
 Geneva Rock (Hansen Pit),"15547 Minuteman Dr, Draper",State Spec Road Base,12.05,40.467977,-111.908433
@@ -71,7 +71,7 @@ Staker Parson (Beck Street Pit),"1730 Beck St, SLC",State Spec Road Base,10.45,4
 Staker Parson (Beef Hollow Pit),"2550 Porter Rockwell Rd, Bluffdale",State Spec Road Base,9.3,40.474308,-111.978574
 Staker Parson (Lehi West Pit),"11700 N Frontage Rd, Lehi",State Spec Road Base,9.75,40.451429,-111.911819
 Staker Parson (Keigley Pit),"12370 S West Mt Rd, Payson",State Spec Road Base,10.35,40.011948,-111.801505
-Kilgore (Parley's Pit),Parleys Canyon (Approx),State Spec Road Base,10.25,40.715,-111.8
+Kilgore (Parley's Pit),Parleys Canyon (Approx),State Spec Road Base,10.25,40.72504,-111.77245
 Geneva Rock (Hansen Pit),"15547 Minuteman Dr, Draper",UDOT Spec Road Base,12.05,40.467977,-111.908433
 Geneva Rock (Pelican Point Pit),"1565 N Redwood Road, Saratoga Springs",UDOT Spec Road Base,10.75,40.261959,-111.868774
 Geneva Rock (Hansen Pit),"15547 Minuteman Dr, Draper",Recycled Concrete Road Base,9.95,40.467977,-111.908433
@@ -86,7 +86,7 @@ Utah Sand and Gravel,"1264 Beck St, SLC",Bedding Sand,5.75,40.797036,-111.906146
 Staker Parson (Beef Hollow Pit),"2550 Porter Rockwell Rd, Bluffdale",Bedding Sand,5.45,40.474308,-111.978574
 Staker Parson (Point East Pit),"15589 Minuteman Dr, Draper",Bedding Sand,7.5,40.462556,-111.912076
 Staker Parson (Lehi West Pit),"11700 N Frontage Rd, Lehi",Bedding Sand,5.65,40.451429,-111.911819
-Kilgore (Parley's Pit),Parleys Canyon (Approx),Bedding Sand,11.85,40.715,-111.8
+Kilgore (Parley's Pit),Parleys Canyon (Approx),Bedding Sand,11.85,40.72504,-111.77245
 Geneva Rock (Black Rock Pit),"Magna, UT",A1b,8.05,40.724938,-112.207187
 Geneva Rock (Black Rock Pit),"Magna, UT",UDOT Spec Road Base,10.7,40.724938,-112.207187
 Geneva Rock (Black Rock Pit),"Magna, UT","2"" Gravel",17.5,40.724938,-112.207187
