@@ -15,8 +15,8 @@ st.set_page_config(page_title="Utah Aggregate Estimator", layout="wide")
 # Constants
 AVG_SPEED_MPH = 35 
 # Constants removed from here, moved to sidebar 
-IMPORT_EFFICIENCY = 0.88
-EXPORT_EFFICIENCY = 0.90 # Can adjust this later if needed
+IMPORT_EFFICIENCY = 0.95
+EXPORT_EFFICIENCY = 0.95 # Can adjust this later if needed
 
 # Load data without caching so CSV updates are immediate
 def load_data():
