@@ -88,22 +88,26 @@ def haversine_distance(lat1, lon1, lat2, lon2):
 
 @st.cache_data(show_spinner=False)
 def get_real_route(lat1, lon1, lat2, lon2):
-    url = f"http://router.project-osrm.org/route/v1/driving/{lon1},{lat1};{lon2},{lat2}?overview=false"
-    headers = {"User-Agent": "UtahGravelEstimator/1.0"}
-    try:
-        time.sleep(0.5)
-        resp = requests.get(url, headers=headers, timeout=5)
-        if resp.status_code == 200:
-            data = resp.json()
-            if data['code'] == 'Ok':
-                route = data['routes'][0]
-                dist_miles = route['distance'] / 1609.34
-                duration_hr = (route['duration'] / 3600.0) * 1.20 # 20% truck penalty for real roads
-                return dist_miles, duration_hr, True
-    except Exception:
-        pass
+    # Check securely for the OpenRouteService API Key
+    api_key = st.secrets.get("ORS_API_KEY") if "ORS_API_KEY" in st.secrets else None
     
-    # Fallback if OSRM is down: Haversine straight-line distance
+    if api_key:
+        # OpenRouteService Heavy Goods Vehicle (HGV) Profile
+        url = f"https://api.openrouteservice.org/v2/directions/driving-hgv?api_key={api_key}&start={lon1},{lat1}&end={lon2},{lat2}"
+        try:
+            resp = requests.get(url, timeout=5)
+            if resp.status_code == 200:
+                data = resp.json()
+                summary = data['features'][0]['properties']['summary']
+                dist_miles = summary['distance'] / 1609.34
+                duration_hr = summary['duration'] / 3600.0
+                
+                # The HGV profile inherently accounts for heavy trucks. Adding a small 5% safety buffer.
+                return dist_miles, duration_hr * 1.05, True
+        except Exception:
+            pass
+            
+    # Fallback if API fails or key is missing
     raw_dist = haversine_distance(lat1, lon1, lat2, lon2)
     # Apply circuity factor based on distance: +50% for <10mi, +30% for >=10mi
     if raw_dist < 10.0:
@@ -457,7 +461,7 @@ if st.session_state.get('do_calc', False):
     if used_fallback:
         st.warning("⚠️ **Live Navigation Servers Down.** Results below are using straight-line distance estimates (+50% circuity for <10mi, +30% for >10mi, at 30 MPH).")
         
-    st.markdown(f"*Assumptions: {load_time_min}m load, {unload_time_min}m unload, {min_hours_per_truck}hr minimum charge, {int(efficiency_factor*100)}% efficiency, 20% truck speed penalty.*")
+    st.markdown(f"*Assumptions: {load_time_min}m load, {unload_time_min}m unload, {min_hours_per_truck}hr minimum charge, {int(efficiency_factor*100)}% efficiency, HGV Routing.*")
     
     # Display interactive dataframe
     st.dataframe(df, width='stretch')
