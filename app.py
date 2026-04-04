@@ -12,6 +12,15 @@ import base64
 # Page Config
 st.set_page_config(page_title="Utah Aggregate Estimator", layout="wide")
 
+# App Navigation Intercept
+app_mode = st.sidebar.selectbox("App Navigation", ["Utah Aggregate Estimator", "Bid Lite Prototype (Beta)"])
+st.sidebar.divider()
+
+if app_mode == "Bid Lite Prototype (Beta)":
+    import bid_lite_app
+    bid_lite_app.run()
+    st.stop()
+
 # Constants
 AVG_SPEED_MPH = 35 
 # Constants removed from here, moved to sidebar 
