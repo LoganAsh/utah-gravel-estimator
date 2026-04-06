@@ -99,6 +99,7 @@ def haversine_distance(lat1, lon1, lat2, lon2):
 def get_real_route(lat1, lon1, lat2, lon2):
     # Check securely for the OpenRouteService API Key
     api_key = st.secrets.get("ORS_API_KEY") if "ORS_API_KEY" in st.secrets else None
+    error_msg = "NO_KEY" if not api_key else ""
     
     if api_key:
         # OpenRouteService Heavy Goods Vehicle (HGV) Profile
@@ -110,22 +111,22 @@ def get_real_route(lat1, lon1, lat2, lon2):
                 summary = data['features'][0]['properties']['summary']
                 dist_miles = summary['distance'] / 1609.34
                 duration_hr = summary['duration'] / 3600.0
-                
-                # The HGV profile inherently accounts for heavy trucks. Adding a small 5% safety buffer.
-                return dist_miles, duration_hr * 1.05, True
-        except Exception:
-            pass
+                return dist_miles, duration_hr * 1.05, True, "OK"
+            else:
+                error_msg = f"HTTP_{resp.status_code}: {resp.text[:100]}"
+        except requests.exceptions.Timeout:
+            error_msg = "TIMEOUT"
+        except Exception as e:
+            error_msg = f"ERROR: {str(e)[:100]}"
             
     # Fallback if API fails or key is missing
     raw_dist = haversine_distance(lat1, lon1, lat2, lon2)
-    # Apply circuity factor based on distance: +50% for <10mi, +30% for >=10mi
     if raw_dist < 10.0:
         dist = raw_dist * 1.5
     else:
         dist = raw_dist * 1.3
         
-    # Average speed of 30 MPH for heavy trucks on surface streets/highways combined
-    return dist, dist / 30.0, False
+    return dist, dist / 30.0, False, error_msg
 
 def get_base64_of_bin_file(bin_file):
     with open(bin_file, 'rb') as f:
@@ -394,10 +395,11 @@ if st.session_state.get('do_calc', False):
     for i, fac in enumerate(active_facilities):
         fac_name = fac[facility_name_key]
         status_text.text(f"Routing to {fac_name} ({i+1}/{total_facs})...")
-        dist, one_way_time_hr, is_real_route = get_real_route(lat, lon, fac['Latitude'], fac['Longitude'])
+        dist, one_way_time_hr, is_real_route, err_reason = get_real_route(lat, lon, fac['Latitude'], fac['Longitude'])
         
         if not is_real_route:
             used_fallback = True
+            st.session_state.last_route_error = err_reason
             
         travel_time_hr = one_way_time_hr * 2
         raw_cycle_hr = travel_time_hr + load_unload_hr
@@ -468,7 +470,8 @@ if st.session_state.get('do_calc', False):
     df.index = df.index + 1
     
     if used_fallback:
-        st.warning("⚠️ **Live Navigation Servers Down.** Results below are using straight-line distance estimates (+50% circuity for <10mi, +30% for >10mi, at 30 MPH).")
+        err_msg = st.session_state.get('last_route_error', 'Unknown Error')
+        st.warning(f"⚠️ **Live Navigation Servers Down.** (Error Code: `{err_msg}`)\n\nResults below are using straight-line distance estimates (+50% circuity for <10mi, +30% for >10mi, at 30 MPH).")
         
     st.markdown(f"*Assumptions: {load_time_min}m load, {unload_time_min}m unload, {min_hours_per_truck}hr minimum charge, {int(efficiency_factor*100)}% efficiency, HGV Routing.*")
     
