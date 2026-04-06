@@ -102,8 +102,8 @@ def get_real_route(lat1, lon1, lat2, lon2):
     error_msg = "NO_KEY" if not api_key else ""
     
     if api_key:
-        # OpenRouteService Heavy Goods Vehicle (HGV) Profile
-        url = f"https://api.openrouteservice.org/v2/directions/driving-hgv?api_key={api_key}&start={lon1},{lat1}&end={lon2},{lat2}"
+        # OpenRouteService standard driving profile (HGV sometimes causes profile unknown errors on GET)
+        url = f"https://api.openrouteservice.org/v2/directions/driving-car?api_key={api_key}&start={lon1},{lat1}&end={lon2},{lat2}"
         try:
             resp = requests.get(url, timeout=5)
             if resp.status_code == 200:
@@ -111,7 +111,7 @@ def get_real_route(lat1, lon1, lat2, lon2):
                 summary = data['features'][0]['properties']['summary']
                 dist_miles = summary['distance'] / 1609.34
                 duration_hr = summary['duration'] / 3600.0
-                return dist_miles, duration_hr * 1.05, True, "OK"
+                return dist_miles, duration_hr * 1.20, True, "OK"
             else:
                 error_msg = f"HTTP_{resp.status_code}: {resp.text[:100]}"
         except requests.exceptions.Timeout:
