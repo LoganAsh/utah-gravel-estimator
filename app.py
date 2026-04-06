@@ -404,10 +404,14 @@ if st.session_state.get('do_calc', False):
             
         travel_time_hr = one_way_time_hr * 2
         raw_cycle_hr = travel_time_hr + load_unload_hr
-        efficiency_factor = IMPORT_EFFICIENCY if job_type == "Import (Delivery)" else EXPORT_EFFICIENCY
-        cycle_time_hr = raw_cycle_hr / efficiency_factor
         
         for truck in selected_trucks:
+            if "10-Wheeler" in truck['Type']:
+                efficiency_factor = 1.00
+            else:
+                efficiency_factor = 0.95
+                
+            cycle_time_hr = raw_cycle_hr / efficiency_factor
             # 1. Total trips required (always rounds UP to the nearest whole trip)
             trips = math.ceil(tons / truck['Capacity_Tons'])
             
@@ -474,7 +478,7 @@ if st.session_state.get('do_calc', False):
         err_msg = st.session_state.get('last_route_error', 'Unknown Error')
         st.warning(f"⚠️ **Live Navigation Servers Down.** (Error Code: `{err_msg}`)\n\nResults below are using straight-line distance estimates (+50% circuity for <10mi, +30% for >10mi, at 30 MPH).")
         
-    st.markdown(f"*Assumptions: {load_time_min}m load, {unload_time_min}m unload, {min_hours_per_truck}hr minimum charge, {int(efficiency_factor*100)}% efficiency, HGV Routing (10-20% speed penalty).*")
+    st.markdown(f"*Assumptions: {load_time_min}m load, {unload_time_min}m unload, {min_hours_per_truck}hr minimum charge, 95% Side Dump / 100% 10-Whl efficiency, HGV Routing (10-20% speed penalty).*")
     
     # Display interactive dataframe
     st.dataframe(df, width='stretch')
