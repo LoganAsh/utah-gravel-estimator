@@ -478,7 +478,7 @@ if st.session_state.get('do_calc', False):
         err_msg = st.session_state.get('last_route_error', 'Unknown Error')
         st.warning(f"⚠️ **Live Navigation Servers Down.** (Error Code: `{err_msg}`)\n\nResults below are using straight-line distance estimates (+50% circuity for <10mi, +30% for >10mi, at 30 MPH).")
         
-    st.markdown(f"*Assumptions: {load_time_min}m load, {unload_time_min}m unload, {min_hours_per_truck}hr minimum charge, 95% Side Dump / 100% 10-Whl efficiency, HGV Routing (10-20% speed penalty).*")
+    st.markdown(f"*Assumptions: {load_time_min}m load, {unload_time_min}m unload, {min_hours_per_truck}hr minimum charge, 95% Side Dump / 100% 10-Whl efficiency, Live Routing + Heavy Truck Penalty (10-20%).*")
     
     # Display interactive dataframe
     st.dataframe(df, width='stretch')
