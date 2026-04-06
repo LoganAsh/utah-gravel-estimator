@@ -111,7 +111,8 @@ def get_real_route(lat1, lon1, lat2, lon2):
                 summary = data['features'][0]['properties']['summary']
                 dist_miles = summary['distance'] / 1609.34
                 duration_hr = summary['duration'] / 3600.0
-                return dist_miles, duration_hr * 1.20, True, "OK"
+                penalty = 1.10 if dist_miles > 10.0 else 1.20
+                return dist_miles, duration_hr * penalty, True, "OK"
             else:
                 error_msg = f"HTTP_{resp.status_code}: {resp.text[:100]}"
         except requests.exceptions.Timeout:
@@ -473,7 +474,7 @@ if st.session_state.get('do_calc', False):
         err_msg = st.session_state.get('last_route_error', 'Unknown Error')
         st.warning(f"⚠️ **Live Navigation Servers Down.** (Error Code: `{err_msg}`)\n\nResults below are using straight-line distance estimates (+50% circuity for <10mi, +30% for >10mi, at 30 MPH).")
         
-    st.markdown(f"*Assumptions: {load_time_min}m load, {unload_time_min}m unload, {min_hours_per_truck}hr minimum charge, {int(efficiency_factor*100)}% efficiency, HGV Routing.*")
+    st.markdown(f"*Assumptions: {load_time_min}m load, {unload_time_min}m unload, {min_hours_per_truck}hr minimum charge, {int(efficiency_factor*100)}% efficiency, HGV Routing (10-20% speed penalty).*")
     
     # Display interactive dataframe
     st.dataframe(df, width='stretch')
