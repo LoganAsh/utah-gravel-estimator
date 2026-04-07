@@ -52,6 +52,7 @@ def load_data():
                 try:
                     row['Price_10W'] = float(row['Price_10W']) if 'Price_10W' in row and row['Price_10W'] else 0.0
                     row['Price_SD'] = float(row['Price_SD']) if 'Price_SD' in row and row['Price_SD'] else 0.0
+                    row['Price_Per_CY'] = float(row['Price_Per_CY']) if 'Price_Per_CY' in row and row['Price_Per_CY'] else 0.0
                     row['Latitude'] = float(row['Latitude'])
                     row['Longitude'] = float(row['Longitude'])
                     dumps.append(row)
