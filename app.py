@@ -409,12 +409,18 @@ if st.session_state.get('do_calc', False):
         for truck in selected_trucks:
             if "10-Wheeler" in truck['Type']:
                 efficiency_factor = 1.00
+                export_capacity = 8.0 # CY
             else:
                 efficiency_factor = 0.95
+                export_capacity = 12.0 # CY
                 
             cycle_time_hr = raw_cycle_hr / efficiency_factor
+            
+            # Determine capacity based on job type
+            capacity = truck['Capacity_Tons'] if job_type == "Import (Delivery)" else export_capacity
+            
             # 1. Total trips required (always rounds UP to the nearest whole trip)
-            trips = math.ceil(tons / truck['Capacity_Tons'])
+            trips = math.ceil(qty / capacity)
             
             # 2. Max trips a truck can do in an 8-hour shift
             max_trips_per_day = math.floor(8.0 / cycle_time_hr)
