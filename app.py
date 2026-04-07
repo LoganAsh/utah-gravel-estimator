@@ -262,14 +262,38 @@ with st.sidebar:
     
     # Get unique materials based on job type
     if job_type == "Import (Delivery)":
-        materials = sorted(list(set([p['Material'] for p in pits])))
+        def get_mat_type(m):
+            ml = m.lower()
+            if 'gravel' in ml: return 'Gravel'
+            if 'road base' in ml: return 'Road Base'
+            if 'sand' in ml: return 'Sand'
+            if 'cobble' in ml: return 'Cobble'
+            if 'a1' in ml or 'fill' in ml: return 'Fill / A1'
+            return 'Other'
+            
+        all_materials = sorted(list(set([p['Material'] for p in pits])))
+        mat_types = sorted(list(set([get_mat_type(m) for m in all_materials])))
+        
+        selected_type = st.selectbox("Material Type", ["All Types"] + mat_types)
+        
+        if selected_type != "All Types":
+            filtered_by_type = [m for m in all_materials if get_mat_type(m) == selected_type]
+        else:
+            filtered_by_type = all_materials
+            
+        spec_choices = st.multiselect("Material Size/Spec", filtered_by_type, placeholder="Select specs (leave empty for all)")
+        
+        # If they picked a type but didn't pick specific specs, use all specs in that type
+        if selected_type != "All Types" and not spec_choices:
+            material_choices = filtered_by_type
+        else:
+            material_choices = spec_choices
     else:
         # Predefined list for export if dumps are empty, otherwise from dumps
         export_defaults = ["Clean Fill", "Topsoil (Unscreened)", "Topsoil (Screened)", "Concrete (Clean)", "Concrete (Dirty/Reinforced)", "Asphalt (Chunked)", "Asphalt (Milled)"]
         dump_mats = sorted(list(set([d['Material'] for d in dumps])))
         materials = dump_mats if dump_mats else export_defaults
-        
-    material_choices = st.multiselect("Filter by Material", materials, placeholder="Select materials (leave empty for all)")
+        material_choices = st.multiselect("Filter by Material", materials, placeholder="Select materials (leave empty for all)")
     
     st.divider()
     with st.expander("⚙️ **Trucking Parameters**", expanded=False):
