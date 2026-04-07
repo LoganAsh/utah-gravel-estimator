@@ -458,7 +458,7 @@ if st.session_state.get('do_calc', False):
         if not is_real_route:
             if err_reason != "OUT_OF_RADIUS_>30MI":
                 used_fallback = True
-                st.session_state.last_route_error = err_reason
+                st.session_state.last_route_error = f"{err_reason} | Failed routing to: {fac_name}" 
             
         travel_time_hr = one_way_time_hr * 2
         raw_cycle_hr = travel_time_hr + load_unload_hr
