@@ -99,6 +99,12 @@ def haversine_distance(lat1, lon1, lat2, lon2):
 
 @st.cache_data(show_spinner=False)
 def get_real_route(lat1, lon1, lat2, lon2):
+    # PRE-FILTER: Check straight-line distance to save API requests
+    raw_dist = haversine_distance(lat1, lon1, lat2, lon2)
+    if raw_dist > 30.0:
+        dist = raw_dist * 1.3
+        return dist, dist / 30.0, False, "OUT_OF_RADIUS_>30MI"
+
     # Check securely for the OpenRouteService API Key
     api_key = st.secrets.get("ORS_API_KEY") if "ORS_API_KEY" in st.secrets else None
     error_msg = "NO_KEY" if not api_key else ""
@@ -401,8 +407,9 @@ if st.session_state.get('do_calc', False):
         dist, one_way_time_hr, is_real_route, err_reason = get_real_route(lat, lon, fac['Latitude'], fac['Longitude'])
         
         if not is_real_route:
-            used_fallback = True
-            st.session_state.last_route_error = err_reason
+            if err_reason != "OUT_OF_RADIUS_>30MI":
+                used_fallback = True
+                st.session_state.last_route_error = err_reason
             
         travel_time_hr = one_way_time_hr * 2
         raw_cycle_hr = travel_time_hr + load_unload_hr
