@@ -50,7 +50,8 @@ def load_data():
             reader = csv.DictReader(f)
             for row in reader:
                 try:
-                    row['Price_Per_Ton'] = float(row['Price_Per_Ton'])
+                    row['Price_10W'] = float(row['Price_10W']) if 'Price_10W' in row and row['Price_10W'] else 0.0
+                    row['Price_SD'] = float(row['Price_SD']) if 'Price_SD' in row and row['Price_SD'] else 0.0
                     row['Latitude'] = float(row['Latitude'])
                     row['Longitude'] = float(row['Longitude'])
                     dumps.append(row)
@@ -246,8 +247,8 @@ with st.sidebar:
     st.header("2. Job Details")
     job_type = st.radio("Job Type", ["Import (Delivery)", "Export (Haul-Off)"], horizontal=True)
     
-    tons_label = "Tons Needed" if job_type == "Import (Delivery)" else "Tons to Haul Off"
-    tons = st.number_input(tons_label, min_value=1, value=None, placeholder="e.g., 800", step=10)
+    qty_label = "Tons Needed" if job_type == "Import (Delivery)" else "Cubic Yards to Haul Off (CY)"
+    qty = st.number_input(qty_label, min_value=1, value=None, placeholder="e.g., 800", step=10)
     
     truck_options = ["Best Option (Compare Both)", "Side Dump", "10-Wheeler"]
     truck_choice = st.selectbox("Truck Type", truck_options)
@@ -354,8 +355,8 @@ if st.session_state.get('do_calc', False):
         st.warning("Please click on the map or search for an address to set the job site.")
         st.session_state.do_calc = False
         st.stop()
-    if not tons:
-        st.warning("Please enter the total tons needed in the sidebar.")
+    if not qty:
+        st.warning(f"Please enter the total {qty_label.split(' ')[0].lower()} needed in the sidebar.")
         st.session_state.do_calc = False
         st.stop()
         
@@ -385,7 +386,7 @@ if st.session_state.get('do_calc', False):
     results = []
     
     st.markdown("---")
-    st.subheader(f"📊 Best Options for {tons} Tons")
+    st.subheader(f"📊 Best Options for {qty} {'Tons' if job_type == 'Import (Delivery)' else 'CY'}")
     
     progress_bar = st.progress(0)
     status_text = st.empty()
@@ -441,10 +442,32 @@ if st.session_state.get('do_calc', False):
             
             # 6. Calculate total costs
             total_trucking_cost = total_billed_hrs * truck['Hourly_Rate']
-            material_cost = fac['Price_Per_Ton'] * tons
+            
+            if job_type == "Import (Delivery)":
+                material_cost = fac['Price_Per_Ton'] * qty
+                base_price_label = f"${fac['Price_Per_Ton']:.2f}"
+                base_col = "Base $/Ton"
+                frt_col = "Frt $/Ton"
+                del_col = "Del $/Ton"
+            else:
+                # Export uses per-load pricing or per-CY pricing
+                if fac.get('Pricing_Type') == 'Per Load':
+                    dump_fee = fac['Price_10W'] if "10-Wheeler" in truck['Type'] else fac['Price_SD']
+                    material_cost = trips * dump_fee
+                    base_price_label = f"${dump_fee:.2f}/Ld"
+                else:
+                    # Fallback if we add per-CY pricing later
+                    material_cost = fac.get('Price_Per_CY', 0) * qty
+                    base_price_label = f"${fac.get('Price_Per_CY', 0):.2f}/CY"
+                
+                base_col = "Base Price"
+                frt_col = "Frt $/CY"
+                del_col = "Total $/CY"
+                
             total_cost = material_cost + total_trucking_cost
             
-            trucking_cost_per_ton = total_trucking_cost / tons
+            unit_cost = total_cost / qty
+            trucking_unit_cost = total_trucking_cost / qty
             
             results.append({
                 'Facility': fac_name,
@@ -452,9 +475,9 @@ if st.session_state.get('do_calc', False):
                 'Truck': truck['Type'],
                 'Dist (mi)': round(dist, 1),
                 'Cycle (min)': int(cycle_time_hr * 60),
-                'Base $/Ton': f"${fac['Price_Per_Ton']:.2f}",
-                'Frt $/Ton': f"${trucking_cost_per_ton:.2f}",
-                'Del $/Ton': total_cost / tons, # Keep as float for sorting
+                base_col: base_price_label,
+                frt_col: f"${trucking_unit_cost:.2f}",
+                del_col: unit_cost, # Keep as float for sorting
                 'Total Cost': total_cost
             })
             
@@ -465,10 +488,12 @@ if st.session_state.get('do_calc', False):
     
     # Sort and format
     df = pd.DataFrame(results)
-    df = df.sort_values('Del $/Ton').head(10).reset_index(drop=True)
+    sort_col = 'Del $/Ton' if job_type == "Import (Delivery)" else 'Total $/CY'
+    df = df.sort_values(sort_col).head(10).reset_index(drop=True)
     
     # Format currency columns for display
-    df['Del $/Ton'] = df['Del $/Ton'].apply(lambda x: f"${x:.2f}")
+    del_col_name = 'Del $/Ton' if job_type == "Import (Delivery)" else 'Total $/CY'
+    df[del_col_name] = df[del_col_name].apply(lambda x: f"${x:.2f}")
     df['Total Cost'] = df['Total Cost'].apply(lambda x: f"${x:,.2f}")
     
     # Adjust index to start at 1
@@ -486,13 +511,14 @@ if st.session_state.get('do_calc', False):
     # Highlight the absolute best option
     if not df.empty:
         best = df.iloc[0]
-        st.success(f"**Best Value:** {best['Facility']} using a {best['Truck']} for **{best['Del $/Ton']}** total.")
+        best_price = best['Del $/Ton'] if job_type == "Import (Delivery)" else best['Total $/CY']
+        st.success(f"**Best Value:** {best['Facility']} using a {best['Truck']} for **{best_price}** total.")
         
         # Add CSV Download Button
         csv_data = df.to_csv(index=False).encode('utf-8')
         st.download_button(
             label="📥 Download Estimate (CSV)",
             data=csv_data,
-            file_name=f"aggregate_estimate_{tons}tons.csv",
+            file_name=f"estimate_{qty}{'tons' if job_type == 'Import (Delivery)' else 'CY'}.csv",
             mime="text/csv"
         )

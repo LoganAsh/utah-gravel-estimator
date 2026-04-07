@@ -1,1 +1,3 @@
-Dump Name,Address,Material,Price_Per_Ton,Latitude,Longitude
+Dump Name,Address,Material,Price_10W,Price_SD,Pricing_Type,Latitude,Longitude
+Concrete Recycling Inc.,"620 S Delong St, Salt Lake City, UT",Concrete (Clean),50.0,80.0,Per Load,40.7545,-111.9534
+Concrete Recycling Inc.,"620 S Delong St, Salt Lake City, UT",Concrete (Dirty/Reinforced),80.0,110.0,Per Load,40.7545,-111.9534
