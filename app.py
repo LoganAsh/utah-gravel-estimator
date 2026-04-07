@@ -111,7 +111,7 @@ def get_real_route(lat1, lon1, lat2, lon2):
     
     if api_key:
         # OpenRouteService standard driving profile (HGV sometimes causes profile unknown errors on GET)
-        url = f"https://api.openrouteservice.org/v2/directions/driving-car?api_key={api_key}&start={lon1},{lat1}&end={lon2},{lat2}&radiuses=5000|5000"
+        url = f"https://api.openrouteservice.org/v2/directions/driving-car?api_key={api_key}&start={lon1},{lat1}&end={lon2},{lat2}&radiuses=-1|-1"
         try:
             resp = requests.get(url, timeout=5)
             if resp.status_code == 200:
