@@ -23,12 +23,20 @@ def run():
 
     # Add Item Section
     st.subheader("1. Add Bid Items")
-    col1, col2, col3 = st.columns([3, 1, 1])
+    col1, col2, col3, col4 = st.columns([2, 3, 1.5, 1.5])
+    
     with col1:
-        selected_item = st.selectbox("Select Item from Catalog", list(CATALOG.keys()))
+        categories = sorted(list(set([v["Category"] for v in CATALOG.values()])))
+        selected_category = st.selectbox("Category", categories)
+        
     with col2:
-        qty = st.number_input("Quantity", min_value=1, value=100, step=10)
+        filtered_items = [k for k, v in CATALOG.items() if v["Category"] == selected_category]
+        selected_item = st.selectbox("Select Item", filtered_items)
+        
     with col3:
+        qty = st.number_input("Quantity", min_value=1, value=100, step=10)
+        
+    with col4:
         st.write("")
         st.write("")
         if st.button("➕ Add to Bid", type="primary", use_container_width=True):
