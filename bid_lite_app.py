@@ -7,9 +7,15 @@ def run():
 
     # Master Catalog (The Database)
     CATALOG = {
+        # Sewer
         "8\" SDR 35 PVC Mainline": {"Category": "Sewer", "UOM": "LF", "Labor": 18.0, "Equip": 15.0, "Material": 12.0},
         "48\" Precast Manhole": {"Category": "Sewer", "UOM": "EA", "Labor": 400.0, "Equip": 350.0, "Material": 1200.0},
-        "4\" Sewer Lateral": {"Category": "Sewer", "UOM": "LF", "Labor": 12.0, "Equip": 10.0, "Material": 8.0}
+        "4\" Sewer Lateral": {"Category": "Sewer", "UOM": "LF", "Labor": 12.0, "Equip": 10.0, "Material": 8.0},
+        
+        # Concrete
+        "Sidewalk": {"Category": "Concrete", "UOM": "SF", "Labor": 4.50, "Equip": 1.00, "Material": 2.20}, # Base 4"
+        "Curb": {"Category": "Concrete", "UOM": "LF", "Labor": 14.00, "Equip": 3.50, "Material": 12.00}, # Base High-Back
+        "Drive Approaches": {"Category": "Concrete", "UOM": "SF", "Labor": 6.00, "Equip": 1.50, "Material": 3.80}
     }
 
     if 'bid_items' not in st.session_state:
@@ -23,6 +29,7 @@ def run():
 
     # Add Item Section
     st.subheader("1. Add Bid Items")
+    
     # Pure vertical layout for maximum mobile compatibility
     categories = sorted(list(set([v["Category"] for v in CATALOG.values()])))
     selected_category = st.selectbox("Category", categories)
@@ -30,21 +37,50 @@ def run():
     filtered_items = [k for k, v in CATALOG.items() if v["Category"] == selected_category]
     selected_item = st.selectbox("Select Item", filtered_items)
     
-    qty = st.number_input("Quantity", min_value=1, value=100, step=10)
+    item_data = CATALOG[selected_item]
+    adjusted_labor = item_data["Labor"]
+    adjusted_equip = item_data["Equip"]
+    adjusted_mat = item_data["Material"]
+    item_display_name = selected_item
+    
+    # --- DYNAMIC UI LOGIC FOR CONCRETE ---
+    if selected_item == "Sidewalk":
+        thickness = st.slider("Thickness (inches)", min_value=4, max_value=10, value=4, step=1)
+        item_display_name = f"Sidewalk ({thickness}\" thick)"
+        
+        # Adjust material cost proportionally (base is 4")
+        adjusted_mat = item_data["Material"] * (thickness / 4.0)
+        # Slight labor/equip increase for thicker pours
+        if thickness > 4:
+            adjusted_labor *= 1.15
+            adjusted_equip *= 1.10
+            
+    elif selected_item == "Curb":
+        curb_type = st.selectbox("Curb Type", ["High-Back (30\")", "Mountable (30\")", "Ribbon / Flat (12\")"])
+        item_display_name = f"Curb ({curb_type})"
+        
+        if curb_type == "Mountable (30\")":
+            adjusted_mat *= 0.85
+            adjusted_labor *= 0.90
+        elif curb_type == "Ribbon / Flat (12\")":
+            adjusted_mat *= 0.40
+            adjusted_labor *= 0.60
+            adjusted_equip *= 0.70
+
+    qty = st.number_input(f"Quantity ({item_data['UOM']})", min_value=1, value=100, step=10)
     
     if st.button("➕ Add to Bid", type="primary", use_container_width=True):
-            item_data = CATALOG[selected_item]
-            st.session_state.bid_items.append({
-                "Item": selected_item,
-                "Category": item_data["Category"],
-                "UOM": item_data["UOM"],
-                "Quantity": qty,
-                "Labor/U": item_data["Labor"],
-                "Equip/U": item_data["Equip"],
-                "Mat/U": item_data["Material"],
-                "Total/U": item_data["Labor"] + item_data["Equip"] + item_data["Material"]
-            })
-            st.rerun()
+        st.session_state.bid_items.append({
+            "Item": item_display_name,
+            "Category": item_data["Category"],
+            "UOM": item_data["UOM"],
+            "Quantity": qty,
+            "Labor/U": adjusted_labor,
+            "Equip/U": adjusted_equip,
+            "Mat/U": adjusted_mat,
+            "Total/U": adjusted_labor + adjusted_equip + adjusted_mat
+        })
+        st.rerun()
 
     # Current Bid Section
     st.divider()
@@ -92,4 +128,3 @@ def run():
             st.rerun()
     else:
         st.info("Your bid is empty. Add items from the catalog above to get started.")
-
