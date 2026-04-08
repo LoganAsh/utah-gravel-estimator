@@ -23,22 +23,16 @@ def run():
 
     # Add Item Section
     st.subheader("1. Add Bid Items")
-    # Split into two rows so it renders perfectly on mobile screens
-    row1_col1, row1_col2 = st.columns([1, 1])
-    with row1_col1:
-        categories = sorted(list(set([v["Category"] for v in CATALOG.values()])))
-        selected_category = st.selectbox("Category", categories)
-    with row1_col2:
-        filtered_items = [k for k, v in CATALOG.items() if v["Category"] == selected_category]
-        selected_item = st.selectbox("Select Item", filtered_items)
-        
-    row2_col1, row2_col2 = st.columns([1, 1])
-    with row2_col1:
-        qty = st.number_input("Quantity", min_value=1, value=100, step=10)
-    with row2_col2:
-        st.write("") # Spacing to align with the input box
-        st.write("")
-        if st.button("➕ Add to Bid", type="primary", use_container_width=True):
+    # Pure vertical layout for maximum mobile compatibility
+    categories = sorted(list(set([v["Category"] for v in CATALOG.values()])))
+    selected_category = st.selectbox("Category", categories)
+    
+    filtered_items = [k for k, v in CATALOG.items() if v["Category"] == selected_category]
+    selected_item = st.selectbox("Select Item", filtered_items)
+    
+    qty = st.number_input("Quantity", min_value=1, value=100, step=10)
+    
+    if st.button("➕ Add to Bid", type="primary", use_container_width=True):
             item_data = CATALOG[selected_item]
             st.session_state.bid_items.append({
                 "Item": selected_item,
