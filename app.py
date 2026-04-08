@@ -322,9 +322,12 @@ with st.sidebar:
     
     st.divider()
     with st.expander("⚙️ **Trucking Parameters**", expanded=False):
+        default_unload = 10 if job_type == "Export (Haul-Off)" else 8
+        default_min_hr = 2.0 if job_type == "Export (Haul-Off)" else 1.0
+        
         load_time_min = st.slider("Load Time (mins)", min_value=5, max_value=60, value=15, step=5)
-        unload_time_min = st.slider("Unload Time (mins)", min_value=5, max_value=60, value=8, step=1)
-        min_hours_per_truck = st.number_input("Minimum Hours per Truck", min_value=0.0, max_value=8.0, value=1.0, step=0.5)
+        unload_time_min = st.slider("Unload Time (mins)", min_value=5, max_value=60, value=default_unload, step=1)
+        min_hours_per_truck = st.number_input("Minimum Hours per Truck", min_value=0.0, max_value=12.0, value=default_min_hr, step=0.5)
 
     st.divider()
     calc_button = st.button("Calculate Best Price", type="primary", use_container_width=True)
