@@ -588,3 +588,4 @@ if st.session_state.get('do_calc', False):
             file_name=f"estimate_{qty}{'tons' if job_type == 'Import (Delivery)' else 'CY'}.csv",
             mime="text/csv"
         )
+# Force Streamlit Reboot
